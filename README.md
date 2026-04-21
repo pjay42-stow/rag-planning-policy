@@ -42,7 +42,7 @@ Planning policy in the UK is spread across long, dense documents -- the National
 
 | Component | Tool |
 |-----------|-----|
-| PDF parsing | `ypypdf` |
+| PDF parsing | `pypdf` |
 | Chunking | `langchain-text-splitters` |
 | Embeddings | `sentence-transformers` (`all-MiniLM-L6-v2`) |
 | Vector store | `ChromaDB` |
@@ -93,11 +93,11 @@ This project is actively under development as part of a structured ML portfolio 
 | Phase | Status |
 |------|-------|
 | Environment setup & PDF chunking | ✓ Complete |
-| Embeddings & ChromaDB ingestion | ☚ In progress |
-| LLM generation step | ☚ Pending |
-| Re-ranking | ☚ Pending |
-| Gradio UI + HF Spaces deployment | ☚ Pending |
-| Evaluation (20 Q/A test set) | ☚ Pending |
+| Embeddings & ChromaDB ingestion | In progress |
+| LLM generation step | Pending |
+| Re-ranking | Pending |
+| Gradio UI + HF Spaces deployment | Pending |
+| Evaluation (20 Q/A test set) | Pending |
 
 ---
 
