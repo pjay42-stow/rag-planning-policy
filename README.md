@@ -12,7 +12,7 @@ Planning policy in the UK is spread across long, dense documents -- the National
 
 ## Approach
 
-1. **Document ingestion** -- PDF parsing with `pypdf`, chunking with LangChain's `RecursiveCharacterTextSplitter`
+1. **Document ingestion** -- PDF parsing with `pypdf`, chunking with LangChain's `RecursiveCharacterTextSplitter`, also split by paragraph number of the NPPF document
 2. **Embeddings** -- `all-MiniLM-L6-v2` via `sentence-transformers` (CPU-fast, no API cost)
 3. **Vector store** -- ChromaDB (local, persistent)
 4. **Re-ranking** -- cross-encoder re-ranking for improved retrieval precision
