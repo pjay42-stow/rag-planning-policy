@@ -12,44 +12,49 @@ Planning policy in the UK is spread across long, dense documents -- the National
 
 ## Approach
 
-1. **Document ingestion** -- PDF parsing with `pypdf`, chunking with LangChain's `RecursiveCharacterTextSplitter`, also split by paragraph number of the NPPF document
-2. **Embeddings** -- `all-MiniLM-L6-v2` via `sentence-transformers` (CPU-fast, no API cost)
-3. **Vector store** -- ChromaDB (local, persistent)
-4. **Re-ranking** -- cross-encoder re-ranking for improved retrieval precision
-5. **Generation** -- Ollama (local LLM) with cited outputs; Claude API for quality comparison
-6. **UI** -- Gradio interface, deployed on Hugging Face Spaces
+1. **Document ingestion** -- PDF parsing with `pypdf`; hybrid chunking strategy splitting on NPPF paragraph boundaries with `RecursiveCharacterTextSplitter` fallback for long paragraphs; footnote stripping to improve chunk quality
+2. **Embeddings** -- `all-MiniLM-L6-v2` via `sentence-transformers` (CPU-fast, no API cost); 356 chunks ingested into ChromaDB with paragraph-number metadata
+3. **Vector store** -- ChromaDB (local, persistent), cosine similarity
+4. **Retrieval** -- top-k semantic search; cross-encoder re-ranking planned for next phase
+5. **Generation** -- Ollama (local LLM, `llama3.2:3b`) with cited outputs; Claude API (`claude-sonnet-4-5`) used for quality comparison
+6. **UI** -- Gradio interface, deployed on Hugging Face Spaces (planned)
 
 ---
 
 ## Results
 
-*To be completed as the project progresses.*
+Initial evaluation on 10 test questions across NPPF policy areas (Sessions 1--3):
 
-- Retrieval recall@5: TBD
-- Answer faithfulness (manual eval, 20 test questions): TBD
-- CPU inference latency per query: TBD
+- **Retrieval grounding**: 10/10 answers grounded in retrieved chunks
+- **Citation accuracy**: 10/10 answers cited correct paragraph numbers
+- **Answer completeness**: 7/10 fully complete; 2/10 partial (retrieval gaps); 1/10 incomplete
+- **Model comparison**: Claude Sonnet 4.5 and llama3.2:3b performed comparably on well-retrieved questions; Claude handled retrieval failures more safely (correctly flagging missing information rather than confabulating)
+- **Key finding**: Answer quality is primarily constrained by retrieval quality, not generation quality -- cross-encoder re-ranking is the highest-value next improvement
+
+Full evaluation table and failure analysis: `02_embeddings_clustering.ipynb`
 
 ---
 
 ## Documents Covered
 
 - [National Planning Policy Framework (NPPF)](https://www.gov.uk/government/publications/national-planning-policy-framework--2) -- publicly available on GOV.UK
-- London Plan 2021 -- publicly available from the GLA (added in Week 3)
+- London Plan 2021 -- publicly available from the GLA (planned for Session 4)
 
 ---
 
 ## Tech Stack
 
 | Component | Tool |
-|-----------|-----|
+|-----------|------|
 | PDF parsing | `pypdf` |
-| Chunking | `langchain-text-splitters` |
+| Chunking | `langchain-text-splitters` (hybrid paragraph + recursive strategy) |
 | Embeddings | `sentence-transformers` (`all-MiniLM-L6-v2`) |
-| Vector store | `ChromaDB` |
-| LLM (local) | Ollama (llama3.2) |
-| Orchestration | LangChain + LangGraph |
-| Frontend | Gradio |
-| Deployment | Hugging Face Spaces |
+| Vector store | `ChromaDB` (persistent, cosine similarity) |
+| LLM (local) | Ollama (`llama3.2:3b`) |
+| LLM (API) | Anthropic Claude (`claude-sonnet-4-5`) |
+| Orchestration | LangChain |
+| Frontend | Gradio (planned) |
+| Deployment | Hugging Face Spaces (planned) |
 
 ---
 
@@ -57,21 +62,28 @@ Planning policy in the UK is spread across long, dense documents -- the National
 
 **Prerequisites:** Python 3.11, conda, [Ollama](https://ollama.com) installed locally
 
+**Note for Windows users:** install PyTorch from the CPU wheel index before installing other dependencies, to avoid DLL initialisation failures.
+
 ```bash
 # 1. Clone the repo
 git clone https://github.com/pjay42-stow/rag-planning-policy
 cd rag-planning-policy
 
-# 2. Create environment and install dependencies
+# 2. Create environment
 conda create -n rag-env python=3.11 -y
 conda activate rag-env
+
+# 3. Install PyTorch first (CPU build -- Windows requires this order)
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+# 4. Install remaining dependencies
 pip install -r requirements.txt
 
-# 3. Download the NPPF PDF
-#    Download from: https://www.gov.uk/government/publications/national-planning-policy-framework--2
+# 5. Download the NPPF PDF
+#    From: https://www.gov.uk/government/publications/national-planning-policy-framework--2
 #    Save as: data/nppf.pdf
 
-# 4. Pull the LLM via Ollama
+# 6. Pull the LLM via Ollama
 ollama pull llama3.2
 ```
 
@@ -80,24 +92,27 @@ ollama pull llama3.2
 ## Notebooks
 
 | Notebook | Description |
-|---------|-----------|
-| `01_chunking.ipynb` | PDF loading, chunking strategy experiments |
-| More to be added... | |
+|----------|-------------|
+| `01_chunking.ipynb` | PDF loading, chunking strategy comparison (fixed-size vs recursive vs sentence vs paragraph vs hybrid) |
+| `02_embeddings_clustering.ipynb` | Embedding pipeline, ChromaDB ingestion, K-Means clustering, t-SNE visualisation, evaluation of 10 test questions |
+| `03_llm_generation.ipynb` | Retrieval pipeline, Ollama generation, Claude API comparison, model evaluation |
 
 ---
 
 ## Project Status
 
-This project is actively under development as part of a structured ML portfolio (May -- October 2026).
-
 | Phase | Status |
-|------|-------|
+|-------|--------|
 | Environment setup & PDF chunking | ✓ Complete |
-| Embeddings & ChromaDB ingestion | In progress |
-| LLM generation step | Pending |
-| Re-ranking | Pending |
+| Embeddings & ChromaDB ingestion | ✓ Complete |
+| K-Means clustering & t-SNE visualisation | ✓ Complete |
+| LLM generation step (Ollama) | ✓ Complete |
+| Model comparison (Claude API vs Ollama) | ✓ Complete |
+| Initial evaluation (10 Q/A, manual scoring) | ✓ Complete |
+| London Plan ingestion | Pending |
+| Cross-encoder re-ranking | Pending |
+| Full evaluation (20 Q/A test set) | Pending |
 | Gradio UI + HF Spaces deployment | Pending |
-| Evaluation (20 Q/A test set) | Pending |
 
 ---
 
@@ -106,4 +121,3 @@ This project is actively under development as part of a structured ML portfolio 
 Peter Jay -- [GitHub](https://github.com/pjay42-stow)
 
 Former UK Civil Servant (DBT, 11 years) transitioning into AI/ML with a focus on public sector applications. MPhys Physics, University of Bath.
-
